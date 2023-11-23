@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "gl.h": "c",
+        "limits": "cpp",
+        "vector": "cpp"
+    }
+}
