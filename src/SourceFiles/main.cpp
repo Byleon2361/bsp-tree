@@ -13,31 +13,18 @@
 #include "../HeaderFiles/bsp-tree.h"
 
 vector<bsp_tree::polygon> allPolygons;
-struct ply_format_exception : public std::exception
-{
-    const char *what() const throw()
-    {
-        return "Incorrect ply format";
-    }
-};
 void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
 {
     ifstream file(filename);
     if (!file.is_open())
-    {
-        throw ply_format_exception();
-    }
-    cout << filename << endl;
+        throw logic_error("Failed to open file");
+
     string line;
     if (!getline(file, line))
-    {
-        throw ply_format_exception();
-    }
+        throw logic_error("Failed to read file");
 
     if (line != "ply")
-    {
-        throw ply_format_exception();
-    }
+        throw logic_error("The file does not contain ply");
 
     unsigned int vertices_size;
     unsigned int faces_size;
@@ -46,32 +33,24 @@ void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
     while (header && getline(file, line))
     {
         string s;
-        istringstream iss(line);
+        stringstream iss(line);
 
         if (!(iss >> s))
-        {
-            throw ply_format_exception();
-        }
+            throw logic_error("Failed to read file");
 
         if (s == "format")
         {
             if (!(iss >> s))
-            {
-                throw ply_format_exception();
-            }
+                throw logic_error("The file does not contain format");
 
             if (s != "ascii")
-            {
-                throw ply_format_exception();
-            }
+                throw logic_error("The file does not contain ascii");
         }
         else if (s == "element")
         {
             unsigned int n;
             if (!(iss >> s >> n))
-            {
-                throw ply_format_exception();
-            }
+                throw logic_error("Failed to read file");
 
             if (s == "vertex")
             {
@@ -94,9 +73,7 @@ void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
     for (unsigned int i = 0; i < vertices_size; ++i)
     {
         if (!(file >> vertices[i].x >> vertices[i].y >> vertices[i].z))
-        {
-            throw ply_format_exception();
-        }
+            throw logic_error("Failed to read coordinates in file");
     }
 
     struct ply_polygon
@@ -106,43 +83,52 @@ void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
 
     vector<ply_polygon> faces;
     faces.resize(faces_size);
-
+    polygons.resize(faces_size);
     for (unsigned int i = 0; i < faces_size; ++i)
     {
         unsigned int n;
 
-        if (!(file >> n >> faces[i].a >> faces[i].b >> faces[i].c))
+        if (file >> n >> faces[i].a >> faces[i].b >> faces[i].c)
         {
-            throw ply_format_exception();
+            polygons[i].p[0] = vertices[faces[i].a];
+            polygons[i].p[1] = vertices[faces[i].b];
+            polygons[i].p[2] = vertices[faces[i].c];
         }
+        else
+            throw logic_error("Failed to read faces in file");
 
         if (n != 3)
-        {
-            throw ply_format_exception();
-        }
+            throw logic_error("All polygons must be triangles");
     }
+}
+void experiment(const vector<bsp_tree::polygon> &polygons)
+{
+    bsp_tree tree;
+    tree.construct(polygons);
 
-    polygons.resize(faces_size);
+    unsigned int fragments = tree.get_fragments();
+    unsigned int polygons_size_2 = polygons.size() * polygons.size();
+    float percentage = static_cast<float>(fragments) / static_cast<float>(polygons_size_2) * 100.0f;
 
-    for (unsigned int i = 0; i < faces_size; ++i)
-    {
-        polygons[i].p[0] = vertices[faces[i].a];
-        polygons[i].p[1] = vertices[faces[i].b];
-        polygons[i].p[2] = vertices[faces[i].c];
-    }
+    cout << "Polygons: " << polygons.size() << endl;
+    cout << "Nodes: " << tree.get_nodes() << endl;
+    cout << "Fragments: " << fragments << endl;
+    cout << "Fragments (" << fragments << ") smaller than polygons^2 (" << polygons_size_2 << "): " << (fragments < polygons_size_2 ? "true" : "false") << " (" << setprecision(3) << fixed << percentage << "%)" << endl;
 }
 void drawTorus()
 {
-    cout << "POLYGONS FROM MODEL"
-         << endl;
-    cout << "==================="
-         << endl;
+    cout << "Monkey" << endl;
     vector<bsp_tree::polygon> polygons;
-
-    cout << "Monkey"
-         << "\n";
-    load_ply("models/monkey.ply", polygons);
-    // experiment(polygons);
+    try
+    {
+        load_ply("models/monkey.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
 
     glBegin(GL_TRIANGLES);
 
@@ -162,7 +148,7 @@ void display()
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    gluLookAt(1.0, 1.0, 3.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 
     glColor3f(1.0, 0.0, 0.0);
     drawTorus();
@@ -178,28 +164,13 @@ void reshape(int width, int height)
     glLoadIdentity();
     gluPerspective(45.0, (double)width / (double)height, 0.1, 100.0);
 }
-
-void experiment(const vector<bsp_tree::polygon> &polygons)
-{
-    bsp_tree tree;
-    tree.construct(polygons);
-
-    unsigned int fragments = tree.fragments();
-    unsigned int polygons_size_2 = polygons.size() * polygons.size();
-    float percentage = static_cast<float>(fragments) / static_cast<float>(polygons_size_2) * 100.0f;
-
-    cout << "Polygons: " << polygons.size() << "\n";
-    cout << "Nodes: " << tree.nodes() << "\n";
-    cout << "Fragments: " << fragments << "\n";
-    cout << "Fragments (" << fragments << ") smaller than polygons^2 (" << polygons_size_2 << "): " << (fragments < polygons_size_2 ? "true" : "false") << " (" << setprecision(3) << fixed << percentage << "%)"
-         << "\n";
-}
 int main(int argc, char **argv)
 {
+    srand(time(NULL));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(640, 480);
-    glutCreateWindow("3D Torus");
+    glutCreateWindow("3D Models");
 
     glEnable(GL_DEPTH_TEST);
 

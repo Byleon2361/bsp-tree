@@ -28,25 +28,26 @@ public:
     void construct(const vector<polygon> &polygons);
 
     // Возвращает количество узлов, составляющих дерево BSP
-    unsigned int nodes();
+    unsigned int get_nodes();
 
     // Возвращает количество фрагментов (разбитых плоскостей)
-    unsigned int fragments();
+    unsigned int get_fragments();
 
-private:
     typedef glm::vec4 plane;
 
     struct node
     {
-        node *l;
-        node *r;
+        plane partition;
+        node *left;
+        node *right;
         vector<polygon> pols;
     };
 
-    node *root_;
+    node *root;
 
-    unsigned int nodes_;
-    unsigned int fragments_;
+private:
+    unsigned int nodes;
+    unsigned int fragments;
 
     // Выбор многоугольника, который определяет плоскость разделения
     unsigned int polygon_index(const vector<polygon> &polygons) const;

@@ -2,6 +2,12 @@
     "files.associations": {
         "gl.h": "c",
         "limits": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "iostream": "cpp",
+        "optional": "cpp",
+        "variant": "cpp",
+        "ostream": "cpp",
+        "stdexcept": "cpp",
+        "iosfwd": "cpp"
     }
 }

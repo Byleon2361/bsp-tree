@@ -1,3 +1,4 @@
+
 #include "../HeaderFiles/bsp-tree.h"
 
 #include <cstdlib>
@@ -14,11 +15,11 @@ void bsp_tree::construct(const vector<polygon> &polygons)
         return;
     }
 
-    fragments_ = 0;
+    fragments = 0;
 
-    root_ = new node;
-    nodes_ = 1;
-    construct_rec(polygons, root_);
+    root = new node;
+    nodes = 1;
+    construct_rec(polygons, root);
 }
 
 void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
@@ -56,40 +57,47 @@ void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
         }
     }
 
-    fragments_ += n->pols.size();
+    fragments += n->pols.size();
 
     if (!polygons_front.empty())
     {
-        n->r = new node;
-        ++nodes_;
-        construct_rec(polygons_front, n->r);
+        n->right = new node;
+        ++nodes;
+        construct_rec(polygons_front, n->right);
     }
     else
     {
-        n->r = nullptr;
+        n->right = nullptr;
     }
 
     if (!polygons_back.empty())
     {
-        n->l = new node;
-        ++nodes_;
-        construct_rec(polygons_back, n->l);
+        n->left = new node;
+        ++nodes;
+        construct_rec(polygons_back, n->left);
     }
     else
     {
-        n->l = nullptr;
+        n->left = nullptr;
     }
 }
 
+// вычисляем уравнение плоскости на основе многоугольника,
+// а функция расстояния определяет положение многоугольника относительно плоскости
 void bsp_tree::to_plane(const bsp_tree::polygon &pol, bsp_tree::plane &pl) const
 {
+    // Вычисляем вектор u как разность векторов между второй и первой точкой многоугольника
     glm::vec3 u = pol.p[1] - pol.p[0];
+    // Вычисляем вектор v как разность векторов между третьей и первой точкой многоугольника
     glm::vec3 v = pol.p[2] - pol.p[0];
 
+    // Вычисляем векторное произведение векторов u и v
     glm::vec3 r = glm::cross(u, v);
+    // Присваиваем координаты вектора r плоскости pl
     pl.x = r.x;
     pl.y = r.y;
     pl.z = r.z;
+    // Вычисляем w коэффициент плоскости путем взятия скалярного произведения вектора r и точки многоугольника
     pl.w = -glm::dot(pl.xyz(), pol.p[0]);
 }
 
@@ -185,33 +193,32 @@ void bsp_tree::polygon_split(const bsp_tree::plane &pl, const polygon &pol, vect
         polygon_split_aux(pl, pol.p[0], pol.p[1], pol.p[2], polygons_back, polygons_front);
     }
 }
-
 bsp_tree::~bsp_tree()
 {
-    erase_rec(root_);
+    erase_rec(root);
 }
 
 void bsp_tree::erase_rec(node *n)
 {
-    if (n->l != nullptr)
+    if (n->left != nullptr)
     {
-        erase_rec(n->l);
+        erase_rec(n->left);
     }
 
-    if (n->r != nullptr)
+    if (n->right != nullptr)
     {
-        erase_rec(n->r);
+        erase_rec(n->right);
     }
 
     delete n;
 }
 
-unsigned int bsp_tree::nodes()
+unsigned int bsp_tree::get_nodes()
 {
-    return nodes_;
+    return nodes;
 }
 
-unsigned int bsp_tree::fragments()
+unsigned int bsp_tree::get_fragments()
 {
-    return fragments_;
+    return fragments;
 }
