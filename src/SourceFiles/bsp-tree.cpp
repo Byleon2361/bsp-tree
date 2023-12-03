@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 
+// Выбираем рандомный полигон
 unsigned int bsp_tree::polygon_index(const vector<polygon> &polygons) const
 {
     return rand() % polygons.size();
@@ -82,29 +83,29 @@ void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
     }
 }
 
-// вычисляем уравнение плоскости на основе многоугольника,
-// а функция расстояния определяет положение многоугольника относительно плоскости
+// вычисление нормали полигона
 void bsp_tree::to_plane(const bsp_tree::polygon &pol, bsp_tree::plane &pl) const
 {
-    // Вычисляем вектор u как разность векторов между второй и первой точкой многоугольника
     glm::vec3 u = pol.p[1] - pol.p[0];
-    // Вычисляем вектор v как разность векторов между третьей и первой точкой многоугольника
     glm::vec3 v = pol.p[2] - pol.p[0];
 
-    // Вычисляем векторное произведение векторов u и v
-    glm::vec3 r = glm::cross(u, v);
+    // Вычисление перпендикуляра r для векторов u и v, т.е. r - вектор нормали полигона
+    glm::vec3 r = cross(u, v);
+
     // Присваиваем координаты вектора r плоскости pl
     pl.x = r.x;
     pl.y = r.y;
     pl.z = r.z;
-    // Вычисляем w коэффициент плоскости путем взятия скалярного произведения вектора r и точки многоугольника
-    pl.w = -glm::dot(pl.xyz(), pol.p[0]);
 }
 
 bsp_tree::dist_res bsp_tree::distance(const bsp_tree::plane &pl, const bsp_tree::polygon &pol) const
 {
-    float d1 = glm::dot(pl, glm::vec4(pol.p[0], 1));
-    float d2 = glm::dot(pl, glm::vec4(pol.p[1], 1));
+    float d1 = glm::dot(glm::normalize(pl), pl - pol.p[0]);
+    float d2 = glm::dot(glm::normalize(pl), pl - pol.p[1]);
+    float d3 = glm::dot(glm::normalize(pl), pl - pol.p[2]);
+    // float d1 = glm::dot(pl, pol.p[0]);
+    // float d2 = glm::dot(pl, pol.p[1]);
+    // float d3 = glm::dot(pl, pol.p[2]);
 
     if (d1 < 0 && d2 > 0)
     {
@@ -112,8 +113,6 @@ bsp_tree::dist_res bsp_tree::distance(const bsp_tree::plane &pl, const bsp_tree:
     }
     else
     {
-        float d3 = glm::dot(pl, glm::vec4(pol.p[2], 1));
-
         if (d3 < 0)
         {
             return bsp_tree::BACK;
@@ -131,7 +130,7 @@ bsp_tree::dist_res bsp_tree::distance(const bsp_tree::plane &pl, const bsp_tree:
 
 void bsp_tree::plane_segment_intersection(const bsp_tree::plane &pl, const glm::vec3 &a, const glm::vec3 &b, glm::vec3 &i) const
 {
-    float t = glm::dot(pl, glm::vec4(a, 1)) / glm::dot(pl.xyz(), b - a);
+    float t = glm::dot(pl, a) / glm::dot(pl.xyz(), b - a);
     i = a + t * (a - b);
 }
 
@@ -164,9 +163,9 @@ void bsp_tree::polygon_split_aux(const bsp_tree::plane &pl, const glm::vec3 &a, 
 
 void bsp_tree::polygon_split(const bsp_tree::plane &pl, const polygon &pol, vector<bsp_tree::polygon> &polygons_front, vector<bsp_tree::polygon> &polygons_back) const
 {
-    float d1 = glm::dot(pl, glm::vec4(pol.p[0], 1));
-    float d2 = glm::dot(pl, glm::vec4(pol.p[1], 1));
-    float d3 = glm::dot(pl, glm::vec4(pol.p[2], 1));
+    float d1 = glm::dot(pl, glm::vec3(pol.p[0]));
+    float d2 = glm::dot(pl, glm::vec3(pol.p[1]));
+    float d3 = glm::dot(pl, glm::vec3(pol.p[2]));
 
     if (d1 < 0 && d2 > 0 && d3 > 0)
     {

@@ -33,7 +33,7 @@ public:
     // Возвращает количество фрагментов (разбитых плоскостей)
     unsigned int get_fragments();
 
-    typedef glm::vec4 plane;
+    typedef glm::vec3 plane;
 
     struct node
     {
