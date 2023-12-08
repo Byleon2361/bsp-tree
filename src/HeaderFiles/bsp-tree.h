@@ -33,22 +33,20 @@ public:
     // Возвращает количество фрагментов (разбитых плоскостей)
     unsigned int get_fragments();
 
-    typedef glm::vec3 plane;
+    typedef glm::vec4 plane;
 
     struct node
     {
-        plane partition;
         node *left;
         node *right;
         vector<polygon> pols;
     };
 
     node *root;
-
-private:
     unsigned int nodes;
     unsigned int fragments;
 
+private:
     // Выбор многоугольника, который определяет плоскость разделения
     unsigned int polygon_index(const vector<polygon> &polygons) const;
 
