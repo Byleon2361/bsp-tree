@@ -137,17 +137,6 @@ void traverse_tree(bsp_tree::node *tree, vector<bsp_tree::polygon> &partitions)
 void drawTorus()
 {
     cout << "Monkey" << endl;
-    // vector<bsp_tree::polygon> polygons;
-    // polygons.resize(3);
-    // polygons[0].p[0] = {-1, -1, -1};
-    // polygons[0].p[1] = {1, -1, -1};
-    // polygons[0].p[2] = {0, 1, -1};
-    // polygons[1].p[0] = {0, 1, -1};
-    // polygons[1].p[1] = {0, -1, -1};
-    // polygons[1].p[2] = {0, 0, 1};
-    // polygons[2].p[0] = {-1, -1, 1};
-    // polygons[2].p[1] = {0, -1, 1};
-    // polygons[2].p[2] = {1, -1, 1};
     vector<bsp_tree::polygon> polygons;
     try
     {
@@ -158,27 +147,15 @@ void drawTorus()
         cerr << "The file format must be ply. " << ex.what() << endl;
         exit(1);
     }
-    // //1
-    //  experiment(polygons);
 
-    // glBegin(GL_TRIANGLES);
-
-    // glColor3f(1.0, 0.0, 0.0);
-    // for (int i = 0; i < polygons.size(); i++)
-    // {
-    //     glVertex3f(polygons[i].p[0].x, polygons[i].p[0].y, polygons[i].p[0].z);
-    //     glVertex3f(polygons[i].p[1].x, polygons[i].p[1].y, polygons[i].p[1].z);
-    //     glVertex3f(polygons[i].p[2].x, polygons[i].p[2].y, polygons[i].p[2].z);
-    // }
-    // glEnd();
-
-    // 2
     bsp_tree tree;
     tree.construct(polygons);
     experiment(polygons);
+
     vector<bsp_tree::polygon> partition;
     traverse_tree(tree.root, partition);
     std::cout << tree.nodes << endl;
+
     glBegin(GL_TRIANGLES);
 
     glColor3f(1.0, 0.0, 0.0);

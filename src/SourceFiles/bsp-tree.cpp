@@ -103,28 +103,26 @@ void bsp_tree::to_plane(const bsp_tree::polygon &pol, bsp_tree::plane &pl) const
 
 bsp_tree::dist_res bsp_tree::distance(const bsp_tree::plane &pl, const bsp_tree::polygon &pol) const
 {
-
     float d1 = glm::dot(pl, glm::vec4(pol.p[0], 1));
     float d2 = glm::dot(pl, glm::vec4(pol.p[1], 1));
+    float d3 = glm::dot(pl, glm::vec4(pol.p[2], 1));
+    if (d1 == 0 && d2 == 0 && d3 == 0)
+    {
+        return bsp_tree::ON;
+    }
     if (d1 < 0 && d2 > 0)
     {
         return bsp_tree::HALF;
     }
     else
     {
-        float d3 = glm::dot(pl, glm::vec4(pol.p[2], 1));
-
         if (d3 < 0)
         {
             return bsp_tree::BACK;
         }
-        else if (d3 > 0)
+        else
         {
             return bsp_tree::FRONT;
-        }
-        else if (d1 == 0 && d2 == 0 && d3 == 0)
-        {
-            return bsp_tree::ON;
         }
     }
 }
@@ -134,7 +132,6 @@ void bsp_tree::plane_segment_intersection(const bsp_tree::plane &pl, const glm::
     glm::vec3 rd = b - a;
 
     float t = -(pl.w + glm::dot(a, pl.xyz())) / glm::dot(rd, pl.xyz());
-
     if (t >= 0 && t <= 1)
     {
         i = a + t * rd;
