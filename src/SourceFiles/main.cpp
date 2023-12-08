@@ -140,12 +140,9 @@ void experiment(const vector<bsp_tree::polygon> &polygons)
     t = wtime() - t;
     cout << "Time of traverse bsp-tree: " << t << endl;
 
-    int fragments = tree.get_fragments();
-    int polygons_size_2 = polygons.size() * polygons.size();
-
     cout << "Polygons: " << polygons.size() << endl;
     cout << "Nodes: " << tree.get_nodes() << endl;
-    cout << "Fragments: " << fragments << endl;
+    cout << "Fragments: " << tree.get_fragments() << endl;
 }
 void drawTorus()
 {
@@ -153,7 +150,7 @@ void drawTorus()
     vector<bsp_tree::polygon> polygons;
     try
     {
-        load_ply("models/cube.ply", polygons);
+        load_ply("models/monkey.ply", polygons);
     }
     catch (const exception &ex)
     {
