@@ -153,7 +153,7 @@ void drawTorus()
     vector<bsp_tree::polygon> polygons;
     try
     {
-        load_ply("models/monkey.ply", polygons);
+        load_ply("models/cube.ply", polygons);
     }
     catch (const exception &ex)
     {

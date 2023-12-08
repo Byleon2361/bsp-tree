@@ -109,7 +109,7 @@ bsp_tree::dist_res bsp_tree::distance(const bsp_tree::plane &pl, const bsp_tree:
     }
     else
     {
-        if (d3 < 0)
+        if (d3 <= 0)
         {
             return bsp_tree::BACK;
         }
