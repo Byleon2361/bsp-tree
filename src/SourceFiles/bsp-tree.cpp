@@ -2,29 +2,23 @@
 #include "../HeaderFiles/bsp-tree.h"
 
 #include <cstdlib>
-#include <iostream>
-unsigned int bsp_tree::polygon_index(const vector<polygon> &polygons) const
-{
-    return rand() % polygons.size();
-}
-
-void bsp_tree::construct(const vector<polygon> &polygons)
+void bsp_tree::initialization(const vector<polygon> &polygons)
 {
     if (polygons.empty())
     {
         return;
     }
 
-    fragments = 0;
+    allPollygons = 0;
 
     root = new node;
     nodes = 1;
-    construct_rec(polygons, root);
+    construct_bspTree(polygons, root);
 }
 
-void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
+void bsp_tree::construct_bspTree(const vector<polygon> &polygons, node *n)
 {
-    unsigned int pol_i = polygon_index(polygons);
+    int pol_i = polygon_index(polygons);
     n->pols.push_back(polygons[pol_i]);
 
     plane pl;
@@ -57,13 +51,13 @@ void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
         }
     }
 
-    fragments += n->pols.size();
+    allPollygons += n->pols.size();
 
     if (!polygons_front.empty())
     {
         n->right = new node;
         ++nodes;
-        construct_rec(polygons_front, n->right);
+        construct_bspTree(polygons_front, n->right);
     }
     else
     {
@@ -74,7 +68,7 @@ void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
     {
         n->left = new node;
         ++nodes;
-        construct_rec(polygons_back, n->left);
+        construct_bspTree(polygons_back, n->left);
     }
     else
     {
@@ -86,17 +80,16 @@ void bsp_tree::construct_rec(const vector<polygon> &polygons, node *n)
 // а функция расстояния определяет положение многоугольника относительно плоскости
 void bsp_tree::to_plane(const bsp_tree::polygon &pol, bsp_tree::plane &pl) const
 {
-    // Вычисляем вектор u как разность векторов между второй и первой точкой многоугольника
     glm::vec3 u = pol.p[1] - pol.p[0];
-    // Вычисляем вектор v как разность векторов между третьей и первой точкой многоугольника
     glm::vec3 v = pol.p[2] - pol.p[0];
 
-    // Вычисляем векторное произведение векторов u и v
-    glm::vec3 r = glm::cross(u, v);
-    // Присваиваем координаты вектора r плоскости pl
-    pl.x = r.x;
-    pl.y = r.y;
-    pl.z = r.z;
+    // Вычисляем нормаль плоскости
+    glm::vec3 n = glm::cross(u, v);
+
+    pl.x = n.x;
+    pl.y = n.y;
+    pl.z = n.z;
+
     // Вычисляем w коэффициент плоскости путем взятия скалярного произведения вектора r и точки многоугольника
     pl.w = -glm::dot(pl.xyz(), pol.p[0]);
 }
@@ -140,10 +133,9 @@ void bsp_tree::plane_segment_intersection(const bsp_tree::plane &pl, const glm::
     {
         i = b - a;
     }
-    std::cout << t << std::endl;
 }
 
-void bsp_tree::polygon_split_aux(const bsp_tree::plane &pl, const glm::vec3 &a, const glm::vec3 &b1, const glm::vec3 &b2, vector<bsp_tree::polygon> &polygons_a, vector<bsp_tree::polygon> &polygons_b) const
+void bsp_tree::create_new_polygons(const bsp_tree::plane &pl, const glm::vec3 &a, const glm::vec3 &b1, const glm::vec3 &b2, vector<bsp_tree::polygon> &polygons_a, vector<bsp_tree::polygon> &polygons_b) const
 {
     glm::vec3 i_ab1;
     plane_segment_intersection(pl, a, b1, i_ab1);
@@ -178,55 +170,60 @@ void bsp_tree::polygon_split(const bsp_tree::plane &pl, const polygon &pol, vect
 
     if (d1 <= 0 && d2 >= 0 && d3 >= 0)
     {
-        polygon_split_aux(pl, pol.p[0], pol.p[1], pol.p[2], polygons_front, polygons_back);
+        create_new_polygons(pl, pol.p[0], pol.p[1], pol.p[2], polygons_front, polygons_back);
     }
     else if (d2 <= 0 && d1 >= 0 && d3 >= 0)
     {
-        polygon_split_aux(pl, pol.p[1], pol.p[0], pol.p[2], polygons_front, polygons_back);
+        create_new_polygons(pl, pol.p[1], pol.p[0], pol.p[2], polygons_front, polygons_back);
     }
     else if (d3 <= 0 && d1 >= 0 && d2 >= 0)
     {
-        polygon_split_aux(pl, pol.p[2], pol.p[0], pol.p[1], polygons_front, polygons_back);
+        create_new_polygons(pl, pol.p[2], pol.p[0], pol.p[1], polygons_front, polygons_back);
     }
     else if (d1 >= 0 && d2 <= 0 && d3 <= 0)
     {
-        polygon_split_aux(pl, pol.p[0], pol.p[1], pol.p[2], polygons_back, polygons_front);
+        create_new_polygons(pl, pol.p[0], pol.p[1], pol.p[2], polygons_back, polygons_front);
     }
     else if (d2 >= 0 && d1 <= 0 && d3 <= 0)
     {
-        polygon_split_aux(pl, pol.p[1], pol.p[0], pol.p[2], polygons_back, polygons_front);
+        create_new_polygons(pl, pol.p[1], pol.p[0], pol.p[2], polygons_back, polygons_front);
     }
     else if (d3 >= 0 && d1 <= 0 && d2 <= 0)
     {
-        polygon_split_aux(pl, pol.p[0], pol.p[1], pol.p[2], polygons_back, polygons_front);
+        create_new_polygons(pl, pol.p[0], pol.p[1], pol.p[2], polygons_back, polygons_front);
     }
 }
-bsp_tree::~bsp_tree()
+int bsp_tree::polygon_index(const vector<polygon> &polygons) const
 {
-    erase_rec(root);
+    return rand() % polygons.size();
 }
 
-void bsp_tree::erase_rec(node *n)
+bsp_tree::~bsp_tree()
+{
+    delete_bspTree(root);
+}
+
+void bsp_tree::delete_bspTree(node *n)
 {
     if (n->left != nullptr)
     {
-        erase_rec(n->left);
+        delete_bspTree(n->left);
     }
 
     if (n->right != nullptr)
     {
-        erase_rec(n->right);
+        delete_bspTree(n->right);
     }
 
     delete n;
 }
 
-unsigned int bsp_tree::get_nodes()
+int bsp_tree::get_nodes()
 {
     return nodes;
 }
 
-unsigned int bsp_tree::get_fragments()
+int bsp_tree::get_fragments()
 {
-    return fragments;
+    return allPollygons;
 }

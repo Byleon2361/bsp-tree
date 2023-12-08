@@ -1,18 +1,22 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
-#include <math.h>
-#include <stdio.h>
-#include <cstdlib>
 #include <iostream>
-#include <string>
-#include <iomanip>
+#include <cstdlib>
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include <sys/time.h>
 #include "../HeaderFiles/bsp-tree.h"
 
 vector<bsp_tree::polygon> allPolygons;
+double wtime()
+{
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    double res = (double)t.tv_sec + (double)t.tv_usec * 1E-6;
+    return res;
+}
 void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
 {
     ifstream file(filename);
@@ -101,20 +105,6 @@ void load_ply(const string &filename, vector<bsp_tree::polygon> &polygons)
             throw logic_error("All polygons must be triangles");
     }
 }
-void experiment(const vector<bsp_tree::polygon> &polygons)
-{
-    bsp_tree tree;
-    tree.construct(polygons);
-
-    unsigned int fragments = tree.get_fragments();
-    unsigned int polygons_size_2 = polygons.size() * polygons.size();
-    float percentage = static_cast<float>(fragments) / static_cast<float>(polygons_size_2) * 100.0f;
-
-    cout << "Polygons: " << polygons.size() << endl;
-    cout << "Nodes: " << tree.get_nodes() << endl;
-    cout << "Fragments: " << fragments << endl;
-    cout << "Fragments (" << fragments << ") smaller than polygons^2 (" << polygons_size_2 << "): " << (fragments < polygons_size_2 ? "true" : "false") << " (" << setprecision(3) << fixed << percentage << "%)" << endl;
-}
 void traverse_tree(bsp_tree::node *tree, vector<bsp_tree::polygon> &partitions)
 {
 
@@ -134,6 +124,29 @@ void traverse_tree(bsp_tree::node *tree, vector<bsp_tree::polygon> &partitions)
         partitions.push_back(tree->pols[i]);
     }
 }
+void experiment(const vector<bsp_tree::polygon> &polygons)
+{
+    bsp_tree tree;
+    double t;
+
+    t = wtime();
+    tree.initialization(polygons);
+    t = wtime() - t;
+    cout << "Time of construct bsp-tree: " << t << endl;
+
+    vector<bsp_tree::polygon> partition;
+    t = wtime();
+    traverse_tree(tree.root, partition);
+    t = wtime() - t;
+    cout << "Time of traverse bsp-tree: " << t << endl;
+
+    int fragments = tree.get_fragments();
+    int polygons_size_2 = polygons.size() * polygons.size();
+
+    cout << "Polygons: " << polygons.size() << endl;
+    cout << "Nodes: " << tree.get_nodes() << endl;
+    cout << "Fragments: " << fragments << endl;
+}
 void drawTorus()
 {
     cout << "Monkey" << endl;
@@ -149,12 +162,11 @@ void drawTorus()
     }
 
     bsp_tree tree;
-    tree.construct(polygons);
+    tree.initialization(polygons);
     experiment(polygons);
 
     vector<bsp_tree::polygon> partition;
     traverse_tree(tree.root, partition);
-    std::cout << tree.nodes << endl;
 
     glBegin(GL_TRIANGLES);
 
