@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
@@ -22,12 +21,11 @@ public:
         float z;
         float w;
     };
+    typedef vec4 plane;
     struct polygon
     {
         vec3 p[3];
     };
-
-    typedef vec4 plane;
 
     struct node
     {
@@ -416,12 +414,11 @@ void experiment(const vector<bsp_tree::polygon> &polygons)
 
     cout << "Polygons: " << polygons.size() << endl;
     cout << "Nodes: " << tree.get_nodes() << endl;
-    cout << "Fragments: " << tree.get_fragments() << endl;
 }
 int main(int argc, char **argv)
 {
     srand(time(NULL));
-    cout << "Monkey" << endl;
+    cout << "cube" << endl;
     vector<bsp_tree::polygon> polygons;
     try
     {
@@ -433,6 +430,85 @@ int main(int argc, char **argv)
         exit(1);
     }
     experiment(polygons);
+    polygons.clear();
+
+    cout << "4cubes" << endl;
+    try
+    {
+        load_ply("models/4cubes.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
+
+    cout << "monkey" << endl;
+    try
+    {
+        load_ply("models/monkey.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
+
+    cout << "dragon.ply" << endl; // 37986
+    try
+    {
+        load_ply("models/dragon.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
+
+    cout << "pharaon" << endl; // 47392
+    try
+    {
+        load_ply("models/pharaon.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
+
+    cout << "highPolDragon" << endl; // 240600
+    try
+    {
+        load_ply("models/highPolDragon.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
+
+    cout << "СheGuevara" << endl; // 487384
+    try
+    {
+        load_ply("models/СheGuevara.ply", polygons);
+    }
+    catch (const exception &ex)
+    {
+        cerr << "The file format must be ply. " << ex.what() << endl;
+        exit(1);
+    }
+    experiment(polygons);
+    polygons.clear();
 
     return 0;
 }
